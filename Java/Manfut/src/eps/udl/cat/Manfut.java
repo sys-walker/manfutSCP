@@ -1,6 +1,8 @@
 package eps.udl.cat;
 
 public class Manfut {
+    public static final int DEFAULT_MANFUT_THREADS=2;
+    public static int num_threads;
 
     public static void main(String[] args)
     {
@@ -12,6 +14,24 @@ public class Manfut {
         // Procesar argumentos.
         if (args.length<2)
             throw new IllegalArgumentException("Error in arguments: ManFut <presupost> <fitxer_jugadors>");
+        if (args.length==3) {
+            if(Integer.parseInt(args[2])>0){
+                num_threads=Integer.parseInt(args[2]);
+            }else{
+                System.out.print(Error.color_red);
+                System.out.println("Negative numbers are not allowed, setting to defaults num_threads=2");
+                System.out.println(Error.end_color);
+                num_threads=DEFAULT_MANFUT_THREADS;
+            }
+
+
+
+        }else{
+            System.out.print(Error.color_red);
+            System.out.println("No  <Num threads>, setting to defaults num_threads=2");
+            System.out.println(Error.end_color);
+            num_threads=DEFAULT_MANFUT_THREADS;
+        }
 
         PresupostFitxatges = Integer.parseInt(args[0]);
         PlayersMarket = new Market();
@@ -22,6 +42,7 @@ public class Manfut {
 
         // Calculate the best team.
         MillorEquip=PlayersMarket.CalcularEquipOptim(PresupostFitxatges);
+
         System.out.print(Error.color_blue);
         System.out.println("-- Best Team -------------------------------------------------------------------------------------");
         MillorEquip.PrintEquipJugadors();

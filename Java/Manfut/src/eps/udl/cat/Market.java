@@ -2,10 +2,13 @@ package eps.udl.cat;
 
 import java.util.ArrayList;
 import java.io.*;
+import java.util.Arrays;
+import java.util.concurrent.Semaphore;
 
 
 public class Market {
     ArrayList<Jugador> Jugadors;
+    static Semaphore semaphore = new Semaphore(1);
 
     int     NJugadors;
     int     NPorters;
@@ -126,42 +129,84 @@ public class Market {
         end=ultimEquip=(int)Math.pow(2,maxbits);
 
         // Evaluating different teams/combinations.
-        System.out.println("Evaluating form " + String.format("%x",first) + "H to " + String.format("%x",end) + "H (Maxbits: "+ maxbits + "). Evaluating "+ (end-first)+"  teams...");
-        for (equip=first;equip<=end;equip++)
-        {
-            JugadorsEquip jugadors;
+        //System.out.println("Evaluating form " + String.format("%x",first) + "H to " + String.format("%x",end) + "H (Maxbits: "+ maxbits + "). Evaluating "+ (end-first)+"  teams...");
+        System.out.println("Evaluating form " + first + " to " + end + " (Maxbits: "+ maxbits + "). Evaluating "+ (end-first)+"  teams...");
 
-            // Get playes from team number. Returns false if the team is not valid.
-            if ((jugadors=ObtenirJugadorsEquip(new IdEquip(equip)))==null)
-                continue;
 
-            //System.out.print("Team " + equip + "->");
+        //------------------AREA CONCURRENT ----------------------------------------
+        int THREADS_DEFALT =2;
+        int num_threads=Manfut.num_threads;
 
-            // Reject teams with repeated players.
-            if (jugadors.JugadorsRepetits())
-            {
-                //System.out.println(Error.color_red +" Invalid." + Error.end_color);
-                continue;	// Equip no valid.
+        int num_steps = end-first;
+        int[][] intervals= new int[num_threads][2];
+        ManfutThread[] threads= new ManfutThread[num_threads];
+        // ------------implementing runnable interface ---------------------
+        // ManfutRunnable[] runnables=new ManfutRunnable[num_threads];
+        // Thread[] threads=new Thread[num_threads];
+        // -----------------------------------------------------------------
+
+        for (int h = 0; h < num_threads; h++) {
+            if (h>0){
+                intervals[h][0]=intervals[h-1][1]+1;
+            }else {
+                intervals[h][0]=first;
             }
+            int block = (num_steps/(num_threads-h));
+
+            if (h==(num_threads-1)){
+                intervals[h][1] = end;
+            }else {
+                intervals[h][1] = intervals[h][0]+block;
+            }
+            System.out.println("CREATED THREAD --> [" +intervals[h][0] + "- " + intervals[h][1]+"]" );
+            threads[h] = new ManfutThread(intervals[h][0],intervals[h][1],PresupostFitxatges,this);
+            threads[h].start();
+            // ------------implementing runnable interface ---------------------
+            // runnables[h] = new ManfutRunnable(intervals[h][0],intervals[h][1],PresupostFitxatges,this);
+            // threads[h] = new Thread(runnables[h]);
+            // threads[h].start();
+            // -----------------------------------------------------------------
 
 
-            // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
-            if (jugadors.PuntuacioEquip()>MaxPuntuacio && jugadors.CostEquip()<PresupostFitxatges)
-            {
-                System.out.print("Team " + equip + "->");
-                // We have a new partial optimal team.
-                MaxPuntuacio=jugadors.PuntuacioEquip();
-                MillorEquip = jugadors;
-                System.out.println(Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". "+ Error.end_color);
-            }
-            else
-            {
-                //System.out.println(" Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ".\r");
-            }
+
+            num_steps=num_steps-block;
         }
 
+        //Join threads and get the data from each one
+
+            for (int i=0; i<num_threads; ++i){
+                try {
+                    threads[i].join();
+                    if (threads[i]!=null){
+                        if ((threads[i].getMillorEquip_local() !=null ?threads[i].getMillorEquip_local().PuntuacioEquip()  : 0 )> (MillorEquip != null ? MillorEquip.PuntuacioEquip() : 0)){
+                            MillorEquip = threads[i].getMillorEquip_local();
+
+                        }
+                    }
+                    // ------------implementing runnable interface ---------------------
+                    //threads[i].join();
+                    //if (runnables[i]!=null){
+                    //    if (   (threads[i].getMillorEquip() !=null ?threads[i].getMillorEquip().PuntuacioEquip()  : 0 ) > (MillorEquip != null ? MillorEquip.PuntuacioEquip() : 0)){
+                    //    MillorEquip = runnables[i].getMillorEquip();
+
+                    //}
+                    // -----------------------------------------------------------------
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+
+
+
+
+
+
+
+            }
         return(MillorEquip);
     }
+
+
 
 
     // Calculate the initial team combination.
@@ -259,4 +304,207 @@ public class Market {
         }
     }
 
+    static class ManfutRunnable implements Runnable{
+        private int first;
+        private int end;
+        private int PresupostFitxatges;
+
+        private Market market;
+        private JugadorsEquip MillorEquip_local = null;
+
+        public ManfutRunnable(int first, int end, int PresupostFitxatges, Market market){
+            this.first = first;
+            this.end = end;
+            this.market = market;
+            this.PresupostFitxatges = PresupostFitxatges;
+        }
+
+        @Override
+        public void run(){
+            int equip;
+            int MaxPuntuacio=-1;
+
+            for (equip=first;equip<=end;equip++)
+            {
+                JugadorsEquip jugadors;
+
+                // Get playes from team number. Returns false if the team is not valid.
+                if ((jugadors=market.ObtenirJugadorsEquip(new IdEquip(equip)))==null)
+                    continue;
+
+                /*try {
+                    semaphore.acquire();
+                    try {
+                        System.out.print("Team " + equip + "->");
+                    }finally {
+                        semaphore.release();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }*/
+
+
+                // Reject teams with repeated players.
+                if (jugadors.JugadorsRepetits())
+                {
+                    /*try {
+                        semaphore.acquire();
+                        try {
+                            System.out.println(Error.color_red +" Invalid." + Error.end_color);
+                        }finally {
+                            semaphore.release();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }*/
+
+                    continue;	// Equip no valid.
+                }
+
+                // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
+                if (jugadors.PuntuacioEquip()>MaxPuntuacio && jugadors.CostEquip()<PresupostFitxatges)
+                {
+                    try {
+                        semaphore.acquire();
+                        try {
+                            System.out.print("Team " + equip + "->");
+                            // We have a new partial optimal team.
+                            MaxPuntuacio=jugadors.PuntuacioEquip();
+                            MillorEquip_local = jugadors;
+                            System.out.println(Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". "+ Error.end_color);
+                        }finally {
+                            semaphore.release();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+                /*else
+                {
+
+                    try {
+                        semaphore.acquire();
+                        try {
+                            System.out.println(" Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ".\r");
+                        }finally {
+                            semaphore.release();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }*/
+
+            }
+        }
+
+        public JugadorsEquip getMillorEquip_local(){
+            return this.MillorEquip_local;
+        }
+    }
+
+    static class ManfutThread extends Thread{
+
+        private int first;
+        private int end;
+        private int PresupostFitxatges;
+
+        private Market market;
+        private JugadorsEquip MillorEquip_local = null;
+
+        public ManfutThread(int first, int end, int PresupostFitxatges, Market market){
+            this.first = first;
+            this.end = end;
+            this.market = market;
+            this.PresupostFitxatges = PresupostFitxatges;
+        }
+
+        @Override
+        public void run(){
+            // El método super no hace nada, solo se invoca por buenas prácticas de programación
+            super.run();
+            int equip;
+            int MaxPuntuacio=-1;
+
+            for (equip=first;equip<=end;equip++)
+            {
+                JugadorsEquip jugadors;
+
+                // Get playes from team number. Returns false if the team is not valid.
+                if ((jugadors=market.ObtenirJugadorsEquip(new IdEquip(equip)))==null)
+                    continue;
+
+                /*try {
+                    semaphore.acquire();
+                    try {
+                        System.out.print("Team " + equip + "->");
+                    }finally {
+                        semaphore.release();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }*/
+
+
+                // Reject teams with repeated players.
+                if (jugadors.JugadorsRepetits())
+                {
+                    /*try {
+                        semaphore.acquire();
+                        try {
+                            System.out.println(Error.color_red +" Invalid." + Error.end_color);
+                        }finally {
+                            semaphore.release();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }*/
+
+                    continue;	// Equip no valid.
+                }
+
+                // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
+                if (jugadors.PuntuacioEquip()>MaxPuntuacio && jugadors.CostEquip()<PresupostFitxatges)
+                {
+                    try {
+                        semaphore.acquire();
+                        try {
+                            System.out.print("Team " + equip + "->");
+                            // We have a new partial optimal team.
+                            MaxPuntuacio=jugadors.PuntuacioEquip();
+                            MillorEquip_local = jugadors;
+                            System.out.println(Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". "+ Error.end_color);
+                        }finally {
+                            semaphore.release();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+                /*else
+                {
+
+                    try {
+                        semaphore.acquire();
+                        try {
+                            System.out.println(" Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ".\r");
+                        }finally {
+                            semaphore.release();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }*/
+
+            }
+        }
+
+        public JugadorsEquip getMillorEquip_local(){
+            return this.MillorEquip_local;
+        }
+
+    }
 }
