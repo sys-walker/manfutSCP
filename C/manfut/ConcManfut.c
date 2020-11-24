@@ -9,30 +9,30 @@
 #include <math.h>
 #include <limits.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include "manfut.h"
 
 #define GetPorter(j) (Jugadors[j])
 #define GetDefensor(j) (Jugadors[NPorters+j])
 #define GetMitg(j) (Jugadors[NPorters+NDefensors+j])
 #define GetDelanter(j) (Jugadors[NPorters+NDefensors+NMitjos+j])
-#define DDEFAULT_THREADS 2
+#define DEFAULT_MANFUT_THREADS 2
 char *color_red = "\033[01;31m";
 char *color_green = "\033[01;32m";
 char *color_blue = "\033[01;34m";
 char *end_color = "\033[00m";
 //----my functions------------------------------------------------------------------------------------------------------
-char *yellow_color = "\033[0;33m";
+sem_t mutex;
 
-struct ThreadArgs {
+struct Intervals {
     TEquip inicio ;
     TEquip fin;
     long int PresupostFitxatges;
     TJugadorsEquip* MillorEquip_parcial;
 };
-typedef struct ThreadArgs ThreadArgs;
+typedef struct Intervals Intervals;
 
-void *howdy(void *input);
-void* funcion_barata(void *input);
+void* CalcularEquipOptim_Thread(Intervals *input);
 // Definition functions prototype---------------------------------------------------------------------------------------
 void LlegirFitxerJugadors(char *pathJugadors);
 void CalcularEquipOptim(long int PresupostFitxatges,  TJugadorsEquip *  MillorEquip);
@@ -46,9 +46,6 @@ unsigned int Log2(unsigned long long int n);
 void PrintJugadors();
 void PrintEquipJugadors(TJugadorsEquip equip);
 
-
-void funcion_del_for(TEquip first, TEquip anEnd, long fitxatges, TJugadorsEquip *pEquip);
-
 // Global variables definition
 TJugador Jugadors[DMaxJugadors];
 int num_threads;
@@ -57,6 +54,7 @@ char cad[256];
 
 int main(int argc, char *argv[])
 {
+    sem_init(&mutex, 0, 1);
     TJugadorsEquip MillorEquip, AuxEquip;
     long int PresupostFitxatges;
     float IntervalBegin=-1, IntervalEnd=-1;
@@ -70,20 +68,32 @@ int main(int argc, char *argv[])
     if (argc>2)
         LlegirFitxerJugadors(argv[2]);
     if (argc>3){
-        num_threads =  atoi(argv[3]);
+        if (atoi(argv[3])>0){
+            num_threads =  atoi(argv[3]);
+            if (num_threads==1){
+                sprintf (cad,"%sSecuential mode%s\n",color_red,end_color);
+                write(1,cad,strlen(cad));
+            }
+        } else{
+            sprintf (cad,"%sNegative numbers are not allowed, setting to defaults num_threads=2%s\n",color_red,end_color);
+            write(1,cad,strlen(cad));
+            num_threads=DEFAULT_MANFUT_THREADS;
+        }
+
     } else{
-        num_threads = DDEFAULT_THREADS;
+        sprintf (cad,"%sNo  <Num threads>, setting to defaults num_threads=2%s\n",color_red,end_color);
+        write(1,cad,strlen(cad));
+        num_threads = DEFAULT_MANFUT_THREADS;
     }
 
 
     // Calculate the best team.
     CalcularEquipOptim(PresupostFitxatges, &MillorEquip);
 
-    //perror("\n\033[01;31mfinalització prematura necessaria per no tenir SIGSEGV al Main");
-    //exit(1);
+
     write(1,color_blue,strlen(color_blue));
     write(1,"-- Best Team -------------------------------------------------------------------------------------\n",strlen("-- Best Team -------------------------------------------------------------------------------------\n"));
-    PrintEquipJugadors(MillorEquip); // error aqui
+    PrintEquipJugadors(MillorEquip);
     sprintf(cad,"   Cost %d, Points: %d.\n", CostEquip(MillorEquip), PuntuacioEquip(MillorEquip));
     write(1,cad,strlen(cad));
     write(1,"-----------------------------------------------------------------------------------------------------\n",strlen("-----------------------------------------------------------------------------------------------------\n"));
@@ -183,36 +193,6 @@ void LlegirFitxerJugadors(char *pathJugadors)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void CalcularEquipOptim(long int PresupostFitxatges, PtrJugadorsEquip MillorEquip)
 {
     unsigned int maxbits;
@@ -228,51 +208,65 @@ void CalcularEquipOptim(long int PresupostFitxatges, PtrJugadorsEquip MillorEqui
     first=primerEquip=GetEquipInicial();
     end=ultimEquip=pow(2,maxbits);
 
-
-    pthread_t Threads[num_threads];
-    PtrJugadorsEquip Parcial[num_threads];
-
-    TEquip start = primerEquip;
-    TEquip taskPart= (ultimEquip-primerEquip)/num_threads;
-    TEquip end_ = taskPart;
-
-    sprintf (cad,"WORK divided range [%lld-%lld]\n",start,ultimEquip);
+// Evaluating different teams/combinations.
+    sprintf (cad,"Evaluating form %llXH to %llXH (Maxbits: %d). Evaluating %lld teams...\n",first,end, maxbits,end-first);
     write(1,cad,strlen(cad));
 
-    for (int i = 0; i < num_threads; ++i) {
-        end_ = (i == num_threads-1) ? ultimEquip :start+taskPart;
+    //------------------AREA CONCURRENT ----------------------------------------
 
-        Parcial[i] = malloc(sizeof(TJugadorsEquip));
+    // num_threads=Manfut.num_threads
 
-        ThreadArgs *parameters = (ThreadArgs *) malloc(sizeof(struct ThreadArgs));
-        parameters->inicio = start;
-        parameters->fin = end_;
-        parameters->MillorEquip_parcial = Parcial[i];
-        parameters->PresupostFitxatges = PresupostFitxatges;
-        if(pthread_create(&Threads[i], NULL, (void *(*)(void *)) funcion_barata, (void *)parameters)){
-            perror("ERROR THREAD");
-            exit(1);
-        } else{
-            sprintf (cad,"Thread created Evaluator  [%lld-%lld]\n",start,end_);
-            write(1,cad,strlen(cad));
+    TEquip num_steps = end-first;
+    TEquip intervals[num_threads][2];
+    pthread_t Threads[num_threads];
+
+    PtrJugadorsEquip Parcial[num_threads];
+
+    for (int h = 0; h < num_threads; ++h) {
+        if (h > 0) {
+            intervals[h][0] = intervals[h - 1][1] + 1;
+        } else {
+            intervals[h][0] = first;
+        }
+        TEquip block = (num_steps / (num_threads - h));
+
+        if (h == (num_threads - 1)) {
+            intervals[h][1] = end;
+        } else {
+            intervals[h][1] = intervals[h][0] + block;
         }
 
-        start = end_ +1;
+        Parcial[h] = malloc(sizeof(TJugadorsEquip));
+
+        Intervals *parameters = (Intervals *) malloc(sizeof(Intervals));
+        parameters->inicio = intervals[h][0];
+        parameters->fin = intervals[h][1];
+        parameters->MillorEquip_parcial = Parcial[h];
+        parameters->PresupostFitxatges = PresupostFitxatges;
+        if(pthread_create(&Threads[h], NULL, (void *(*)(void *)) CalcularEquipOptim_Thread, parameters)){
+            perror("ERROR THREAD");
+            //TODO CancelThreads
+            exit(1);
+        }
+        num_steps -= block;
+
     }
-    int max = 0;
+
     for (int i = 0; i <  num_threads; ++i) {
 
         if(pthread_join(Threads[i], NULL)){		//Espera a que termine la ejecucion del hilo j.
             printf("Error al hacer join\n");
             exit(1);
         }else{
-            if (PuntuacioEquip(*Parcial[i]) > max){
-                max = PuntuacioEquip(*Parcial[i]);
-                memcpy(MillorEquip->Delanters, Parcial[i]->Delanters,sizeof(MillorEquip->Delanters));
-                memcpy(MillorEquip->Porter, Parcial[i]->Porter,sizeof(MillorEquip->Porter));
-                memcpy(MillorEquip->Mitjos, Parcial[i]->Mitjos,sizeof(MillorEquip->Mitjos));
-                memcpy(MillorEquip->Defensors, Parcial[i]->Defensors,sizeof(MillorEquip->Defensors));
-            }
+            //if (*Parcial[i] ==NULL){} //TODO comprobar que no sigui Nullpointer
+                if (PuntuacioEquip(*Parcial[i]) > MaxPuntuacio){
+                    MaxPuntuacio = PuntuacioEquip(*Parcial[i]);
+                    memcpy(MillorEquip->Delanters, Parcial[i]->Delanters,sizeof(MillorEquip->Delanters));
+                    memcpy(MillorEquip->Porter, Parcial[i]->Porter,sizeof(MillorEquip->Porter));
+                    memcpy(MillorEquip->Mitjos, Parcial[i]->Mitjos,sizeof(MillorEquip->Mitjos));
+                    memcpy(MillorEquip->Defensors, Parcial[i]->Defensors,sizeof(MillorEquip->Defensors));
+                }
+           //}
             free(Parcial[i]);
         }
     }
@@ -280,13 +274,12 @@ void CalcularEquipOptim(long int PresupostFitxatges, PtrJugadorsEquip MillorEqui
 
 }
 
-void* funcion_barata(void *input){
+void* CalcularEquipOptim_Thread(Intervals *input){
 
-
-    TEquip first =((ThreadArgs*)input)->inicio;
-    TEquip end = ((ThreadArgs*)input)->fin;
-    long int PresupostFitxatges = ((ThreadArgs*)input)->PresupostFitxatges;
-    TJugadorsEquip* MillorEquip = ((ThreadArgs*)input)->MillorEquip_parcial;
+    TEquip first =input->inicio;
+    TEquip end = input->fin;
+    long int PresupostFitxatges =input->PresupostFitxatges;
+    TJugadorsEquip* MillorEquip = input->MillorEquip_parcial;
     free(input);
 
 
@@ -303,14 +296,16 @@ void* funcion_barata(void *input){
             continue;
 
 
-        sprintf(cad,"Team %lld ->",equip);
-        write(1,cad,strlen(cad));
+        //sprintf(cad,"Team %lld ->",equip);
+       //write(1,cad,strlen(cad));
+
         // Reject teams with repeated players.
         if (JugadorsRepetits(jugadors))
         {
 
-            sprintf(cad,"%s Invalid.\r%s", color_red, end_color);
-            write(1,cad,strlen(cad));
+            //sprintf(cad,"%s Invalid.\r%s", color_red, end_color);
+            //write(1,cad,strlen(cad));
+
             continue;	// Equip no valid.
         }
 
@@ -318,19 +313,26 @@ void* funcion_barata(void *input){
         if (PuntuacioEquip(jugadors)>MaxPuntuacio && CostEquip(jugadors)<PresupostFitxatges)
         {
             // We have a new partial optimal team.
+            //sprintf(cad,"Team %lld ->",equip);
+            //write(1,cad,strlen(cad));
             MaxPuntuacio=PuntuacioEquip(jugadors);
             memcpy(MillorEquip,&jugadors,sizeof(TJugadorsEquip));
-            sprintf(cad,"%s Cost: %d  Points: %d. %s\n", yellow_color, CostEquip(jugadors), PuntuacioEquip(jugadors), end_color);
+
+            sem_wait(&mutex);
+            sprintf(cad,"%s Team %lld -> %s cost: %d  Points: %d. %s\n",end_color,equip, color_green, CostEquip(jugadors), PuntuacioEquip(jugadors), end_color);
             write(1,cad,strlen(cad));
+            sem_post(&mutex);
+
         }
-        else
+        /*else
         {
+
             sprintf(cad," Cost: %d  Points: %d. \r", CostEquip(jugadors), PuntuacioEquip(jugadors));
             write(1,cad,strlen(cad));
-        }
+
+        }*/
+
     }
-
-
 
 
     pthread_exit(NULL);
