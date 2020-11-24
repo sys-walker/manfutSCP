@@ -17,7 +17,13 @@ public class Manfut {
         if (args.length==3) {
             if(Integer.parseInt(args[2])>0){
                 num_threads=Integer.parseInt(args[2]);
+                if (num_threads==1){
+                    System.out.print(Error.color_red);
+                    System.out.println("Secuential mode");
+                    System.out.println(Error.end_color);
+                }
             }else{
+
                 System.out.print(Error.color_red);
                 System.out.println("Negative numbers are not allowed, setting to defaults num_threads=2");
                 System.out.println(Error.end_color);
