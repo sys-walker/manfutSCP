@@ -2,13 +2,10 @@ package eps.udl.cat;
 
 import java.util.ArrayList;
 import java.io.*;
-import java.util.Arrays;
-import java.util.concurrent.Semaphore;
 
 
 public class Market {
     ArrayList<Jugador> Jugadors;
-    static Semaphore semaphore = new Semaphore(1);
 
     int NJugadors;
     int NPorters;
@@ -314,30 +311,17 @@ public class Market {
                 if ((jugadors = market.ObtenirJugadorsEquip(new IdEquip(equip))) == null)
                     continue;
 
-                /*try {
-                    semaphore.acquire();
-                    try {
+                /*
                         System.out.print("Team " + equip + "->");
-                    }finally {
-                        semaphore.release();
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }*/
+                 */
 
 
                 // Reject teams with repeated players.
                 if (jugadors.JugadorsRepetits()) {
-                    /*try {
-                        semaphore.acquire();
-                        try {
-                            System.out.println(Error.color_red +" Invalid." + Error.end_color);
-                        }finally {
-                            semaphore.release();
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }*/
+                    
+                    /*
+                    System.out.println(Error.color_red +" Invalid." + Error.end_color);
+                    */
 
                     continue;    // Equip no valid.
                 }
@@ -345,36 +329,24 @@ public class Market {
                 // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
                 if (jugadors.PuntuacioEquip() > MaxPuntuacio && jugadors.CostEquip() < PresupostFitxatges) {
                     try {
-                        semaphore.acquire();
-                        try {
-                            System.out.print("Team " + equip + "->");
-                            // We have a new partial optimal team.
-                            MaxPuntuacio = jugadors.PuntuacioEquip();
-                            MillorEquip_local = jugadors;
-                            System.out.println(Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " + Error.end_color);
-                        } finally {
-                            semaphore.release();
-                        }
-                    } catch (InterruptedException e) {
+                        BufferedWriter stdout = new BufferedWriter(new OutputStreamWriter(System.out));
+
+                        stdout.write("Team " + equip + "->"+Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " + Error.end_color+"\n");
+                        stdout.flush();
+                        // We have a new partial optimal team.
+                        MaxPuntuacio = jugadors.PuntuacioEquip();
+                        MillorEquip_local = jugadors;
+                    }
+                    catch (Exception e) {
                         e.printStackTrace();
                     }
-
 
                 }
                 /*else
                 {
 
-                    try {
-                        semaphore.acquire();
-                        try {
-                            System.out.println(" Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ".\r");
-                        }finally {
-                            semaphore.release();
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }*/
+                    System.out.println(" Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ".\r");
+                */
 
             }
         }
@@ -414,30 +386,18 @@ public class Market {
                 if ((jugadors = market.ObtenirJugadorsEquip(new IdEquip(equip))) == null)
                     continue;
 
-                /*try {
-                    semaphore.acquire();
-                    try {
+                /*
                         System.out.print("Team " + equip + "->");
-                    }finally {
-                        semaphore.release();
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }*/
+
+                */
 
 
                 // Reject teams with repeated players.
                 if (jugadors.JugadorsRepetits()) {
-                    /*try {
-                        semaphore.acquire();
-                        try {
+                    /*
                             System.out.println(Error.color_red +" Invalid." + Error.end_color);
-                        }finally {
-                            semaphore.release();
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }*/
+
+                    */
 
                     continue;    // Equip no valid.
                 }
@@ -445,36 +405,23 @@ public class Market {
                 // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
                 if (jugadors.PuntuacioEquip() > MaxPuntuacio && jugadors.CostEquip() < PresupostFitxatges) {
                     try {
-                        semaphore.acquire();
-                        try {
-                            System.out.print("Team " + equip + "->");
-                            // We have a new partial optimal team.
-                            MaxPuntuacio = jugadors.PuntuacioEquip();
-                            MillorEquip_local = jugadors;
-                            System.out.println(Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " + Error.end_color);
-                        } finally {
-                            semaphore.release();
-                        }
-                    } catch (InterruptedException e) {
+                        BufferedWriter stdout = new BufferedWriter(new OutputStreamWriter(System.out));
+
+                        stdout.write("Team " + equip + "->"+Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " + Error.end_color+"\n");
+                        stdout.flush();
+                        // We have a new partial optimal team.
+                        MaxPuntuacio = jugadors.PuntuacioEquip();
+                        MillorEquip_local = jugadors;
+                    }
+                    catch (Exception e) {
                         e.printStackTrace();
                     }
-
 
                 }
                 /*else
                 {
-
-                    try {
-                        semaphore.acquire();
-                        try {
-                            System.out.println(" Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ".\r");
-                        }finally {
-                            semaphore.release();
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }*/
+                        System.out.println(" Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ".\r");
+                 */
 
             }
         }
