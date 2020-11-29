@@ -1,3 +1,10 @@
+/* --------------------------------------------------------------- Práctica 1.
+Código fuente: ConcManfut.c
+Grau Informàtica
+39939768S - Pere Antoni Rollon Baiges
+47433543E - Francisco Javier Roig Gregorio
+--------------------------------------------------------------- */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>

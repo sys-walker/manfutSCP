@@ -1,3 +1,10 @@
+/* --------------------------------------------------------------- Práctica 1.
+Código fuente: Manfut.java
+Grau Informàtica
+39939768S - Pere Antoni Rollon Baiges
+47433543E - Francisco Javier Roig Gregorio
+--------------------------------------------------------------- */
+
 package eps.udl.cat;
 
 public class Manfut {
