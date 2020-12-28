@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/Manfut_signals.dir/main.c.o  -o Manfut_signals 

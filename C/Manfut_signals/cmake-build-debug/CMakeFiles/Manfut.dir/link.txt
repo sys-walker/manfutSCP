@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/Manfut.dir/Manfut.c.o  -o Manfut  -lpthread -lm 

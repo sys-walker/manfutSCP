@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/pere/Documentos/ClionProjects/Manfut_signals/Manfut.c
+stdio.h
+-
+unistd.h
+-
+string.h
+-
+stdlib.h
+-
+errno.h
+-
+sys/types.h
+-
+sys/stat.h
+-
+fcntl.h
+-
+math.h
+-
+limits.h
+-
+pthread.h
+-
+manfut.h
+/home/pere/Documentos/ClionProjects/Manfut_signals/manfut.h
+
+/home/pere/Documentos/ClionProjects/Manfut_signals/manfut.h
+
