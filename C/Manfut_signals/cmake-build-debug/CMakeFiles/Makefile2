@@ -64,10 +64,10 @@ RM = /home/pere/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/203.5981.166/bin/
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/pere/Documentos/ClionProjects/Manfut_signals
+CMAKE_SOURCE_DIR = /home/pere/manfutSCP/C/Manfut_signals
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/pere/Documentos/ClionProjects/Manfut_signals/cmake-build-debug
+CMAKE_BINARY_DIR = /home/pere/manfutSCP/C/Manfut_signals/cmake-build-debug
 
 #=============================================================================
 # Directory level rules for the build root directory
@@ -94,14 +94,14 @@ clean: CMakeFiles/Manfut.dir/clean
 CMakeFiles/Manfut.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Manfut.dir/build.make CMakeFiles/Manfut.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Manfut.dir/build.make CMakeFiles/Manfut.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/pere/Documentos/ClionProjects/Manfut_signals/cmake-build-debug/CMakeFiles --progress-num=1,2 "Built target Manfut"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/pere/manfutSCP/C/Manfut_signals/cmake-build-debug/CMakeFiles --progress-num=1,2 "Built target Manfut"
 .PHONY : CMakeFiles/Manfut.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Manfut.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/pere/Documentos/ClionProjects/Manfut_signals/cmake-build-debug/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/pere/manfutSCP/C/Manfut_signals/cmake-build-debug/CMakeFiles 2
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Manfut.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/pere/Documentos/ClionProjects/Manfut_signals/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/pere/manfutSCP/C/Manfut_signals/cmake-build-debug/CMakeFiles 0
 .PHONY : CMakeFiles/Manfut.dir/rule
 
 # Convenience name for target.

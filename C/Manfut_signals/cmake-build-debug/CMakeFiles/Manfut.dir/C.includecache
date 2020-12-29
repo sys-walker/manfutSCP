@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/pere/Documentos/ClionProjects/Manfut_signals/Manfut.c
+/home/pere/manfutSCP/C/Manfut_signals/Manfut.c
 stdio.h
 -
 unistd.h
@@ -30,7 +30,7 @@ limits.h
 pthread.h
 -
 manfut.h
-/home/pere/Documentos/ClionProjects/Manfut_signals/manfut.h
+/home/pere/manfutSCP/C/Manfut_signals/manfut.h
 
-/home/pere/Documentos/ClionProjects/Manfut_signals/manfut.h
+/home/pere/manfutSCP/C/Manfut_signals/manfut.h
 

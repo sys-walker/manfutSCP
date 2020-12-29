@@ -30,7 +30,7 @@ char *color_green = "\033[01;32m";
 char *color_blue = "\033[01;34m";
 char *end_color = "\033[00m";
 
-//----Estructura de dades-----------------------------------------------------------------------------------------------------
+//Estructura de dades
 struct TeamInterval {
     TEquip inicio ;
     TEquip fin;
@@ -40,7 +40,7 @@ struct TeamInterval {
 typedef struct TeamInterval TeamInterval;
 
 
-// Definition functions prototype---------------------------------------------------------------------------------------
+// Definition functions prototype
 void LlegirFitxerJugadors(char *pathJugadors);
 void CalcularEquipOptim(long int PresupostFitxatges,  TJugadorsEquip *  MillorEquip);
 TBoolean ObtenirJugadorsEquip (TEquip equip,  TJugadorsEquip *  jugadors);

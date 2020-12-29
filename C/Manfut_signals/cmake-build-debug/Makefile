@@ -68,10 +68,10 @@ RM = /home/pere/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/203.5981.166/bin/
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/pere/Documentos/ClionProjects/Manfut_signals
+CMAKE_SOURCE_DIR = /home/pere/manfutSCP/C/Manfut_signals
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/pere/Documentos/ClionProjects/Manfut_signals/cmake-build-debug
+CMAKE_BINARY_DIR = /home/pere/manfutSCP/C/Manfut_signals/cmake-build-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -100,9 +100,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/pere/Documentos/ClionProjects/Manfut_signals/cmake-build-debug/CMakeFiles /home/pere/Documentos/ClionProjects/Manfut_signals/cmake-build-debug/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/pere/manfutSCP/C/Manfut_signals/cmake-build-debug/CMakeFiles /home/pere/manfutSCP/C/Manfut_signals/cmake-build-debug/CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/pere/Documentos/ClionProjects/Manfut_signals/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/pere/manfutSCP/C/Manfut_signals/cmake-build-debug/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
