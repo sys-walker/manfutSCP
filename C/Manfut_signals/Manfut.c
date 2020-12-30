@@ -17,6 +17,7 @@ Grau Informàtica
 #include <limits.h>
 #include <pthread.h>
 #include "manfut.h"
+#include "StringLinkedList.h" // if needed, if not then remove
 
 #define GetPorter(j) (Jugadors[j])
 #define GetDefensor(j) (Jugadors[NPorters+j])
@@ -60,9 +61,12 @@ TJugador Jugadors[DMaxJugadors];
 int num_threads;
 int NJugadors, NPorters, NDefensors, NMitjos, NDelanters;
 char cad[256];
+List *list;
 
 int main(int argc, char *argv[])
 {
+    list = LinkedList_init(100);
+
 
     TJugadorsEquip MillorEquip, AuxEquip;
     long int PresupostFitxatges;
@@ -335,7 +339,13 @@ void* CalcularEquipOptim_Thread(TeamInterval *input){
             memcpy(MillorEquip,&jugadors,sizeof(TJugadorsEquip));
 
             sprintf(buffer,"%s Team %lld -> %s cost: %d  Points: %d. %s\n",end_color,equip, color_green, CostEquip(jugadors), PuntuacioEquip(jugadors), end_color);
-            write(1,buffer,strlen(cad));
+            InsertIntoLinkedList(buffer,list);
+            char * s= getFirstItem(list);
+
+            write(1,buffer,strlen(buffer));
+
+
+
 
 
         }
