@@ -21,7 +21,7 @@ public class Manfut {
 
         // Procesar argumentos.
         if (args.length<2)
-            throw new IllegalArgumentException("Error in arguments: ManFut <presupost> <fitxer_jugadors> [<Num _Threads>]");
+            //throw new IllegalArgumentException("Error in arguments: ManFut <presupost> <fitxer_jugadors> [<Num _Threads>]");
         if (args.length==3) {
             if(Integer.parseInt(args[2])>0){
                 num_threads=Integer.parseInt(args[2]);
@@ -37,9 +37,6 @@ public class Manfut {
                 System.out.println(Error.end_color);
                 num_threads=DEFAULT_MANFUT_THREADS;
             }
-
-
-
         }else{
             System.out.print(Error.color_red);
             System.out.println("No  <Num threads>, setting to defaults num_threads=2");
@@ -47,12 +44,12 @@ public class Manfut {
             num_threads=DEFAULT_MANFUT_THREADS;
         }
 
-        PresupostFitxatges = Integer.parseInt(args[0]);
+        num_threads = 12;
+        PresupostFitxatges = 500;//Integer.parseInt(args[0]);
         PlayersMarket = new Market();
-
-         err = PlayersMarket.LlegirFitxerJugadors(args[1]);
-         if (err!=Error.COk)
-             Error.showError("[Manfut] ERROR Reading players file.");
+        err = PlayersMarket.LlegirFitxerJugadors("Test/mercat50j.csv");//(args[1]);
+        if (err!=Error.COk)
+            Error.showError("[Manfut] ERROR Reading players file.");
 
         // Calculate the best team.
         MillorEquip=PlayersMarket.CalcularEquipOptim(PresupostFitxatges);

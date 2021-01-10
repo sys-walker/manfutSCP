@@ -14,34 +14,34 @@ import java.io.*;
 public class Market {
     ArrayList<Jugador> Jugadors;
 
-    int NJugadors;
-    int NPorters;
-    int NDefensors;
-    int NMitjos;
-    int NDelanters;
+    long NJugadors;
+    long NPorters;
+    long NDefensors;
+    long NMitjos;
+    long NDelanters;
 
     Market() {
         Jugadors = new ArrayList<Jugador>();
     }
 
-    Jugador GetJugador(int j) {
-        return Jugadors.get(j);
+    Jugador GetJugador(long j) {
+        return Jugadors.get((int) j);
     }
 
-    Jugador GetPorter(int j) {
-        return Jugadors.get(j);
+    Jugador GetPorter(long j) {
+        return Jugadors.get((int) j);
     }
 
-    Jugador GetDefensor(int j) {
-        return Jugadors.get(NPorters + j);
+    Jugador GetDefensor(long j) {
+        return Jugadors.get((int) (NPorters + j));
     }
 
-    Jugador GetMitg(int j) {
-        return Jugadors.get(NPorters + NDefensors + j);
+    Jugador GetMitg(long j) {
+        return Jugadors.get((int) (NPorters + NDefensors + j));
     }
 
-    Jugador GetDelanter(int j) {
-        return Jugadors.get(NPorters + NDefensors + NMitjos + j);
+    Jugador GetDelanter(long j) {
+        return Jugadors.get((int) (NPorters + NDefensors + NMitjos + j));
     }
 
     // Read file with the market players list (each line containts a plater: "Id.;Name;Position;Cost;Team;Points")
@@ -194,7 +194,7 @@ public class Market {
     // Calculate the initial team combination.
     int GetEquipInicial() {
         int p, equip = 0;
-        int bitsPorters, bitsDefensors, bitsMitjos, bitsDelanters;
+        long bitsPorters, bitsDefensors, bitsMitjos, bitsDelanters;
 
         bitsPorters = Manfut.Log2(NPorters);
         bitsDefensors = Manfut.Log2(NDefensors);
@@ -229,7 +229,7 @@ public class Market {
     // Returns false if the team is not valid.
     JugadorsEquip ObtenirJugadorsEquip(IdEquip equip) {
         int p;
-        int bitsPorters, bitsDefensors, bitsMitjos, bitsDelanters;
+        long bitsPorters, bitsDefensors, bitsMitjos, bitsDelanters;
         JugadorsEquip jugadors = new JugadorsEquip(this);
 
         bitsPorters = Manfut.Log2(NPorters);
