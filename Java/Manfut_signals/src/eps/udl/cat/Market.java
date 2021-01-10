@@ -44,6 +44,8 @@ public class Market {
         return Jugadors.get((int) (NPorters + NDefensors + NMitjos + j));
     }
 
+    public static JugadorsEquip MillorEquip;
+
     // Read file with the market players list (each line containts a plater: "Id.;Name;Position;Cost;Team;Points")
     Error LlegirFitxerJugadors(String pathJugadors) {
         long Offset = 0;
@@ -129,11 +131,8 @@ public class Market {
 
     JugadorsEquip CalcularEquipOptim(int PresupostFitxatges) {
         long maxbits;
-        int equip, primerEquip, ultimEquip, first, end;
-        int MaxPuntuacio = -1;
-        JugadorsEquip MillorEquip = null;
-
-        //PrintJugadors();
+        int first, end;
+        //JugadorsEquip MillorEquip = null;
 
         // Calculated number of bits required for all teams codification.
         maxbits = Manfut.Log2(NPorters) * JugadorsEquip.DPosPorters + Manfut.Log2(NDefensors) * JugadorsEquip.DPosDefensors + Manfut.Log2(NMitjos) * JugadorsEquip.DPosMitjos + Manfut.Log2(NDelanters) * JugadorsEquip.DPosDelanters;
@@ -141,8 +140,8 @@ public class Market {
             Error.showError("[Market:CalcularEquipOptim] The number of player overflow the maximum width supported.");
 
         // Calculate first and end team that have to be evaluated.
-        first = primerEquip = GetEquipInicial();
-        end = ultimEquip = (int) Math.pow(2, maxbits);
+        first = GetEquipInicial();
+        end = (int) Math.pow(2, maxbits);
 
         // Evaluating different teams/combinations.
         System.out.println("Evaluating form " + String.format("%x",first) + "H to " + String.format("%x",end) + "H (Maxbits: "+ maxbits + "). Evaluating "+ (end-first)+"  teams...");
@@ -178,9 +177,10 @@ public class Market {
             try {
                 threads[i].join();
                 if (threads[i] != null) {
-                    if ((threads[i].getMillorEquip_local() != null ? threads[i].getMillorEquip_local().PuntuacioEquip() : 0) > (MillorEquip != null ? MillorEquip.PuntuacioEquip() : 0)) {
-                        MillorEquip = threads[i].getMillorEquip_local();
-
+                    synchronized (this) {
+                        if ((threads[i].getMillorEquip_local() != null ? threads[i].getMillorEquip_local().PuntuacioEquip() : 0) > (MillorEquip != null ? MillorEquip.PuntuacioEquip() : 0)) {
+                            MillorEquip = threads[i].getMillorEquip_local();
+                        }
                     }
                 }
             } catch (InterruptedException e) {

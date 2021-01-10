@@ -44,10 +44,10 @@ public class Manfut {
             num_threads=DEFAULT_MANFUT_THREADS;
         }
 
-        num_threads = 12;
-        PresupostFitxatges = 500;//Integer.parseInt(args[0]);
+        num_threads = 4;
+        PresupostFitxatges = 300;//Integer.parseInt(args[0]);
         PlayersMarket = new Market();
-        err = PlayersMarket.LlegirFitxerJugadors("Test/mercat50j.csv");//(args[1]);
+        err = PlayersMarket.LlegirFitxerJugadors("Test/mercat25j.csv");//(args[1]);
         if (err!=Error.COk)
             Error.showError("[Manfut] ERROR Reading players file.");
 
