@@ -1,4 +1,4 @@
-/* --------------------------------------------------------------- 
+/* ---------------------------------------------------------------
 Práctica 1.
 Código fuente: ConcManfut.c
 Grau Informàtica
@@ -23,6 +23,9 @@ Grau Informàtica
 #define GetMitg(j) (Jugadors[NPorters+NDefensors+j])
 #define GetDelanter(j) (Jugadors[NPorters+NDefensors+NMitjos+j])
 #define DEFAULT_MANFUT_THREADS 2
+#define MANFUT_BUFFER_LIMIT 1024
+
+char *color_yellow = "\033[93m";
 char *color_red = "\033[01;31m";
 char *color_green = "\033[01;32m";
 char *color_blue = "\033[01;34m";
@@ -215,7 +218,7 @@ void CalcularEquipOptim(long int PresupostFitxatges, PtrJugadorsEquip MillorEqui
     first=primerEquip=GetEquipInicial();
     end=ultimEquip=pow(2,maxbits);
 
-// Evaluating different teams/combinations.
+    // Evaluating different teams/combinations.
     sprintf (cad,"Evaluating form %llXH to %llXH (Maxbits: %d). Evaluating %lld teams...\n",first,end, maxbits,end-first);
     write(1,cad,strlen(cad));
 
@@ -261,7 +264,7 @@ void CalcularEquipOptim(long int PresupostFitxatges, PtrJugadorsEquip MillorEqui
     for (int i = 0; i <  num_threads; ++i) {
 
         if(pthread_join(Threads[i], NULL)){		//Espera a que termine la ejecucion del hilo i.
-            perror("Error al hacer join\n"); 
+            perror("Error al hacer join\n");
             cancel_threads(Threads);
             exit(1);
         }else{
@@ -288,7 +291,7 @@ void cancel_threads(pthread_t Theads[]) {
 }
 
 void* CalcularEquipOptim_Thread(TeamInterval *input){
-    char buffer[256];
+    char buffer[MANFUT_BUFFER_LIMIT];
 
     TEquip first =input->inicio;
     TEquip end = input->fin;
@@ -298,8 +301,10 @@ void* CalcularEquipOptim_Thread(TeamInterval *input){
 
 
     int MaxPuntuacio = -1;
-    TJugadorsEquip MillorEquip_parcial;
     TEquip equip;
+    //memset(buffer,0, sizeof(buffer));
+    //sprintf (buffer,"%sThread %lu Evaluating form %llXH to %llXH. Evaluating %lld teams...\n",color_yellow,pthread_self(),first,end, end-first);
+    //write(1,buffer,strlen(buffer));
 
     for (equip=first;equip<=end;equip++)
     {
@@ -308,42 +313,29 @@ void* CalcularEquipOptim_Thread(TeamInterval *input){
         // Get playes from team number. Returns false if the team is not valid.
         if (!ObtenirJugadorsEquip(equip, &jugadors))
             continue;
-
-
-        //sprintf(cad,"Team %lld ->",equip);
-        //write(1,cad,strlen(cad));
-
         // Reject teams with repeated players.
         if (JugadorsRepetits(jugadors))
         {
-
-            //sprintf(cad,"%s Invalid.\r%s", color_red, end_color);
-            //write(1,cad,strlen(cad));
+            sprintf(buffer,"%s Team %lld -> %s Invalid.\r%s",end_color,equip, color_red, end_color);
+            write(1,buffer,strlen(buffer));
 
             continue;	// Equip no valid.
         }
 
         // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
+        memset(buffer,0, sizeof(buffer));
         if (PuntuacioEquip(jugadors)>MaxPuntuacio && CostEquip(jugadors)<PresupostFitxatges)
         {
             // We have a new partial optimal team.
-            //sprintf(cad,"Team %lld ->",equip);
-            //write(1,cad,strlen(cad));
             MaxPuntuacio=PuntuacioEquip(jugadors);
             memcpy(MillorEquip,&jugadors,sizeof(TJugadorsEquip));
 
             sprintf(buffer,"%s Team %lld -> %s cost: %d  Points: %d. %s\n",end_color,equip, color_green, CostEquip(jugadors), PuntuacioEquip(jugadors), end_color);
-            write(1,buffer,strlen(cad));
-
-
+            write(1,buffer,strlen(buffer));
+        }else{
+            sprintf(buffer,"%s Team %lld -> cost: %d  Points: %d. \r%s",end_color,equip, CostEquip(jugadors), PuntuacioEquip(jugadors), end_color);
+            write(1,buffer,strlen(buffer));
         }
-        /*else
-        {
-
-            sprintf(cad," Cost: %d  Points: %d. \r", CostEquip(jugadors), PuntuacioEquip(jugadors));
-            write(1,cad,strlen(cad));
-
-        }*/
 
     }
 
@@ -601,5 +593,4 @@ void PrintEquipJugadors(TJugadorsEquip equip)
     }
     write(1,"\n",strlen("\n"));
 }
-
 
