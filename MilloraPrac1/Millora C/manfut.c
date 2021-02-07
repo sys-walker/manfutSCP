@@ -25,7 +25,7 @@ Grau Informàtica
 #define DEFAULT_MANFUT_THREADS 2
 #define MANFUT_BUFFER_LIMIT 1024
 
-char *color_yellow = "\033[93m";
+char *color_orange = "\033[38;5;209m";
 char *color_red = "\033[01;31m";
 char *color_green = "\033[01;32m";
 char *color_blue = "\033[01;34m";
@@ -302,9 +302,9 @@ void* CalcularEquipOptim_Thread(TeamInterval *input){
 
     int MaxPuntuacio = -1;
     TEquip equip;
-    //memset(buffer,0, sizeof(buffer));
-    //sprintf (buffer,"%sThread %lu Evaluating form %llXH to %llXH. Evaluating %lld teams...\n",color_yellow,pthread_self(),first,end, end-first);
-    //write(1,buffer,strlen(buffer));
+    memset(buffer,0, sizeof(buffer));
+    sprintf (buffer,"%s[Thread %lu] Evaluating form %llXH to %llXH. Evaluating %lld teams...\n",color_orange,pthread_self(),first,end, end-first);
+    write(1,buffer,strlen(buffer));
 
     for (equip=first;equip<=end;equip++)
     {
@@ -316,7 +316,7 @@ void* CalcularEquipOptim_Thread(TeamInterval *input){
         // Reject teams with repeated players.
         if (JugadorsRepetits(jugadors))
         {
-            sprintf(buffer,"%s Team %lld -> %s Invalid.\r%s",end_color,equip, color_red, end_color);
+            sprintf(buffer,"%s[Thread %lu] Team %lld -> %s Invalid.\r%s",end_color,pthread_self(),equip, color_red, end_color);
             write(1,buffer,strlen(buffer));
 
             continue;	// Equip no valid.
@@ -330,10 +330,10 @@ void* CalcularEquipOptim_Thread(TeamInterval *input){
             MaxPuntuacio=PuntuacioEquip(jugadors);
             memcpy(MillorEquip,&jugadors,sizeof(TJugadorsEquip));
 
-            sprintf(buffer,"%s Team %lld -> %s cost: %d  Points: %d. %s\n",end_color,equip, color_green, CostEquip(jugadors), PuntuacioEquip(jugadors), end_color);
+            sprintf(buffer,"%s[Thread %lu] Team %lld -> %s cost: %d  Points: %d. %s\n",end_color,pthread_self(), equip, color_green, CostEquip(jugadors), PuntuacioEquip(jugadors), end_color);
             write(1,buffer,strlen(buffer));
         }else{
-            sprintf(buffer,"%s Team %lld -> cost: %d  Points: %d. \r%s",end_color,equip, CostEquip(jugadors), PuntuacioEquip(jugadors), end_color);
+            sprintf(buffer,"%s[Thread %lu] Team %lld -> cost: %d  Points: %d. \r%s",end_color,pthread_self(),equip, CostEquip(jugadors), PuntuacioEquip(jugadors), end_color);
             write(1,buffer,strlen(buffer));
         }
 
