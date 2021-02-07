@@ -304,6 +304,14 @@ public class Market {
             int MaxPuntuacio = -1;
             BufferedWriter stdout = new BufferedWriter(new OutputStreamWriter(System.out));
 
+            try {
+                String msg= String.format("%sThread: %d  Evaluating form %xH to %xH Evaluating %d teams...\n%s",Error.color_orange,Thread.currentThread().getId(),first,end,(end-first),Error.end_color);
+                stdout.write(msg);
+                stdout.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             for (equip = first; equip <= end; equip++) {
                 JugadorsEquip jugadors;
 
@@ -314,7 +322,8 @@ public class Market {
                 // Reject teams with repeated players.
                 if (jugadors.JugadorsRepetits()) {
                     try {
-                        stdout.write("Team " + equip + "->"+Error.color_red +" Invalid." + Error.end_color + "\r");
+                        String msg= String.format("%s[Thread %d] Team %d -> %sInvalid.\r%s",Error.end_color,Thread.currentThread().getId(),equip,Error.color_red,Error.end_color);
+                        stdout.write(msg);
                         stdout.flush();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -325,24 +334,22 @@ public class Market {
                 // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
                 if (jugadors.PuntuacioEquip() > MaxPuntuacio && jugadors.CostEquip() < PresupostFitxatges) {
                     try {
-                        stdout.write("Team " + equip + "->"+Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " + Error.end_color+"\n");
+                        String msg= String.format("%s[Thread %d] Team %d -> %sCost: %d Points:  %d\n%s",Error.end_color,Thread.currentThread().getId(),equip,Error.color_green,jugadors.CostEquip(),jugadors.PuntuacioEquip(),Error.end_color);
+                        stdout.write(msg);
                         stdout.flush();
-                        // We have a new partial optimal team.
                         MaxPuntuacio = jugadors.PuntuacioEquip();
                         MillorEquip_local = jugadors;
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
-
                 }else {
                     try {
-                        stdout.write("Team " + equip + "-> Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ".\r");
+                        String msg= String.format("%s[Thread %d] Team %d -> Cost: %d Points:  %d\r%s",Error.end_color,Thread.currentThread().getId(),equip,jugadors.CostEquip(),jugadors.PuntuacioEquip(),Error.end_color);
+                        stdout.write(msg);
                         stdout.flush();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
                 }
 
             }
