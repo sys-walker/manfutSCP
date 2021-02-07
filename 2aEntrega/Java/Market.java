@@ -338,8 +338,8 @@ public class Market {
 
                     // Reject teams with repeated players.
                     if (jugadors.JugadorsRepetits()){
-                        msg = "Team " + equip + "->"+Error.color_red +" Invalid." + "\r"+ Error.end_color;
-                        //ManfutMessages.sendToStorge(msg);
+                        msg=String.format("%s[Thread %d] Team %d -> %sInvalid.\r%s",Error.end_color,Thread.currentThread().getId(),equip,Error.color_red,Error.end_color);
+                        ManfutMessages.sendToStorge(msg);
                         local_statistics.invld++;
                         continue;	// Equip no valid.
                     }
@@ -348,14 +348,14 @@ public class Market {
                     int puntuacioEquip = jugadors.PuntuacioEquip();
                     // Check if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
                     if (puntuacioEquip > Market.MaxPuntuacio && costEquip < this.PresupostFitxatges) {
-                        msg="Team " + equip + "->"+Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " + Error.end_color+"\n";
+                        msg=String.format("%s[Thread %d] Team %d -> %sCost: %d Points:  %d\n%s",Error.end_color,Thread.currentThread().getId(),equip,Error.color_green,jugadors.CostEquip(),jugadors.PuntuacioEquip(),Error.end_color);
                         ManfutMessages.sendToStorge(msg);
                         // We have a new partial optimal team.
                         Market.MaxPuntuacio=puntuacioEquip;
                         Market.shared_MillorEquip = jugadors;
                     }
                     else{
-                        msg=Error.end_color+"Team " + equip + "->" + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " +"\n"+ Error.end_color;
+                        msg=String.format("%s[Thread %d] Team %d -> Cost: %d Points:  %d\r%s",Error.end_color,Thread.currentThread().getId(),equip,jugadors.CostEquip(),jugadors.PuntuacioEquip(),Error.end_color);
                         ManfutMessages.sendToStorge(msg);
                     }
                     mutex.unlock();
@@ -447,7 +447,7 @@ public class Market {
             }
 
         }
-        
+
         public static void sendToStorge(String message) {
             try {
                 semaphore.acquire();
@@ -460,7 +460,7 @@ public class Market {
                 mutex.unlock();
             }
         }
-        
+
         private void printAll_(){
             for (String msg : storage) {
                 System.out.print(msg);
@@ -568,7 +568,7 @@ public class Market {
                     this.worstName,this.worst_cost,this.worst_points,
                     Error.end_color);
 
-            ManfutMessages.sendToStorge(msg);
+            ManfutMessages.sendToStorge( msg);
         }
 
         public void print_statistics_(){
@@ -586,7 +586,7 @@ public class Market {
                     this.worstName,this.worst_cost,this.worst_points,
                     Error.end_color);
 
-            ManfutMessages.sendToStorge(msg);
+            ManfutMessages.sendToStorge( msg);
 
         }
 
