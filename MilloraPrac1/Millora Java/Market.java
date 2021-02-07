@@ -303,9 +303,10 @@ public class Market {
             int equip;
             int MaxPuntuacio = -1;
             BufferedWriter stdout = new BufferedWriter(new OutputStreamWriter(System.out));
+            String msg="";
 
             try {
-                String msg= String.format("%sThread: %d  Evaluating form %xH to %xH Evaluating %d teams...\n%s",Error.color_orange,Thread.currentThread().getId(),first,end,(end-first),Error.end_color);
+                msg= String.format("%sThread: %d  Evaluating form %xH to %xH Evaluating %d teams...\n%s",Error.color_orange,Thread.currentThread().getId(),first,end,(end-first),Error.end_color);
                 stdout.write(msg);
                 stdout.flush();
             } catch (IOException e) {
@@ -322,7 +323,7 @@ public class Market {
                 // Reject teams with repeated players.
                 if (jugadors.JugadorsRepetits()) {
                     try {
-                        String msg= String.format("%s[Thread %d] Team %d -> %sInvalid.\r%s",Error.end_color,Thread.currentThread().getId(),equip,Error.color_red,Error.end_color);
+                        msg= String.format("%s[Thread %d] Team %d -> %sInvalid.\r%s",Error.end_color,Thread.currentThread().getId(),equip,Error.color_red,Error.end_color);
                         stdout.write(msg);
                         stdout.flush();
                     } catch (IOException e) {
@@ -334,7 +335,7 @@ public class Market {
                 // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
                 if (jugadors.PuntuacioEquip() > MaxPuntuacio && jugadors.CostEquip() < PresupostFitxatges) {
                     try {
-                        String msg= String.format("%s[Thread %d] Team %d -> %sCost: %d Points:  %d\n%s",Error.end_color,Thread.currentThread().getId(),equip,Error.color_green,jugadors.CostEquip(),jugadors.PuntuacioEquip(),Error.end_color);
+                        msg= String.format("%s[Thread %d] Team %d -> %sCost: %d Points:  %d\n%s",Error.end_color,Thread.currentThread().getId(),equip,Error.color_green,jugadors.CostEquip(),jugadors.PuntuacioEquip(),Error.end_color);
                         stdout.write(msg);
                         stdout.flush();
                         MaxPuntuacio = jugadors.PuntuacioEquip();
@@ -344,7 +345,7 @@ public class Market {
                     }
                 }else {
                     try {
-                        String msg= String.format("%s[Thread %d] Team %d -> Cost: %d Points:  %d\r%s",Error.end_color,Thread.currentThread().getId(),equip,jugadors.CostEquip(),jugadors.PuntuacioEquip(),Error.end_color);
+                        msg= String.format("%s[Thread %d] Team %d -> Cost: %d Points:  %d\r%s",Error.end_color,Thread.currentThread().getId(),equip,jugadors.CostEquip(),jugadors.PuntuacioEquip(),Error.end_color);
                         stdout.write(msg);
                         stdout.flush();
                     } catch (IOException e) {
