@@ -315,66 +315,64 @@ public class Market {
         public void run(){
             // El método super no hace nada, solo se invoca por buenas prácticas de programación
             super.run();
-            int equip;
+            try{
+                int equip;
+                String msg= String.format("%sThread: %d  Evaluating form %xH to %xH Evaluating %d teams...\n%s",Error.color_orange,Thread.currentThread().getId(),first,end,(end-first),Error.end_color);
+                ManfutMessages.sendToStorge(msg);
 
-            String msg= String.format("%sThread: %d  Evaluating form %xH to %xH Evaluating %d teams...\n%s",Error.color_orange,Thread.currentThread().getId(),first,end,(end-first),Error.end_color);
-            ManfutMessages.sendToStorge(msg);
+                for (equip=first;equip<=end;equip++) {
+                    JugadorsEquip jugadors;
 
-            for (equip=first;equip<=end;equip++) {
-                JugadorsEquip jugadors;
+                    this.local_statistics.evalComb++;
 
-                this.local_statistics.evalComb++;
+                    // Get playes from team number. Returns false if the team is not valid.
+                    if (this.local_statistics.evalComb%Manfut.M == 0){
+                        print_local_statistics();
+                    }
 
-                // Get playes from team number. Returns false if the team is not valid.
-                if (this.local_statistics.evalComb%Manfut.M == 0){
+                    // Get playes from team number. Returns false if the team is not valid.
+                    if ((jugadors=market.ObtenirJugadorsEquip(new IdEquip(equip)))==null) {
+                        this.local_statistics.invld++;
+                        continue;
+                    }
+
+                    // Reject teams with repeated players.
+                    if (jugadors.JugadorsRepetits()){
+                        msg = "Team " + equip + "->"+Error.color_red +" Invalid." + "\r"+ Error.end_color;
+                        //ManfutMessages.sendToStorge(msg);
+                        local_statistics.invld++;
+                        continue;	// Equip no valid.
+                    }
+                    mutex.lock();
+                    int costEquip = jugadors.CostEquip();
+                    int puntuacioEquip = jugadors.PuntuacioEquip();
+                    // Check if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
+                    if (puntuacioEquip > Market.MaxPuntuacio && costEquip < this.PresupostFitxatges) {
+                        msg="Team " + equip + "->"+Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " + Error.end_color+"\n";
+                        ManfutMessages.sendToStorge(msg);
+                        // We have a new partial optimal team.
+                        Market.MaxPuntuacio=puntuacioEquip;
+                        Market.shared_MillorEquip = jugadors;
+                    }
+                    else{
+                        msg=Error.end_color+"Team " + equip + "->" + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " +"\n"+ Error.end_color;
+                        ManfutMessages.sendToStorge(msg);
+                    }
+                    mutex.unlock();
+
+                    this.local_statistics.make_statistics(jugadors, costEquip, puntuacioEquip, this.PresupostFitxatges,equip);
+                }
+
+                Manfut.remainingThreads++;
+
+                while (Manfut.remainingThreads <= Manfut.num_threads){
                     print_local_statistics();
-                }
-
-                // Get playes from team number. Returns false if the team is not valid.
-                if ((jugadors=market.ObtenirJugadorsEquip(new IdEquip(equip)))==null) {
-                    this.local_statistics.invld++;
-                    continue;
-                }
-
-                // Reject teams with repeated players.
-                if (jugadors.JugadorsRepetits()){
-                    msg = "Team " + equip + "->"+Error.color_red +" Invalid." + "\r"+ Error.end_color;
-                    //ManfutMessages.sendToStorge(msg);
-                    local_statistics.invld++;
-                    continue;	// Equip no valid.
-                }
-                mutex.lock();
-                int costEquip = jugadors.CostEquip();
-                int puntuacioEquip = jugadors.PuntuacioEquip();
-                // Check if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
-                if (puntuacioEquip > Market.MaxPuntuacio && costEquip < this.PresupostFitxatges) {
-                    msg="Team " + equip + "->"+Error.color_green + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " + Error.end_color+"\n";
-                    ManfutMessages.sendToStorge(msg);
-                    // We have a new partial optimal team.
-                    Market.MaxPuntuacio=puntuacioEquip;
-                    Market.shared_MillorEquip = jugadors;
-                }
-                else{
-                    msg=Error.end_color+"Team " + equip + "->" + " Cost: " + jugadors.CostEquip() + " Points: " + jugadors.PuntuacioEquip() + ". " + Error.end_color+"\n";
-                    //ManfutMessages.sendToStorge(msg);
-                }
-                mutex.unlock();
-
-                this.local_statistics.make_statistics(jugadors, costEquip, puntuacioEquip, this.PresupostFitxatges,equip);
-            }
-
-            Manfut.remainingThreads++;
-
-            while (Manfut.remainingThreads <= Manfut.num_threads){
-
-                print_local_statistics();
-
-                try {
                     Market.JoinBarrier.await();
-                } catch (InterruptedException | BrokenBarrierException e) {
-                    e.printStackTrace();
                 }
+            }catch (InterruptedException | BrokenBarrierException e){
+                e.printStackTrace();
             }
+
         }
 
         public void print_local_statistics() {
@@ -413,13 +411,43 @@ public class Market {
         public ManfutMessages(){
 
         }
-        private void printAll_(){
-            for (String msg : storage) {
-                System.out.print(msg);
-            }
-            storage.clear();
-        }
 
+        @Override
+        public void run(){
+            // El método super no hace nada, solo se invoca por buenas prácticas de programación
+            super.run();
+            try {
+                while (!running){
+                    try{
+                        mutex.lock();
+
+                        while (storage.size() != MAX_MESSAGES && !running)
+                            addCondition.await();
+
+                        if (storage.size() > 0) {
+                            printAll_();
+                            semaphore.release(MAX_MESSAGES);
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } finally {
+                        mutex.unlock();
+                    }
+                }
+
+                // received stop request
+                try{
+                    mutex.lock(); // prevent IllegalMonitorStateException
+                    stopped_thread.signal();
+                } finally {
+                    mutex.unlock();
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
+        }
+        
         public static void sendToStorge(String message) {
             try {
                 semaphore.acquire();
@@ -432,42 +460,17 @@ public class Market {
                 mutex.unlock();
             }
         }
+        
+        private void printAll_(){
+            for (String msg : storage) {
+                System.out.print(msg);
+            }
+            storage.clear();
+        }
 
         public static void stop_(){
             running=true;
             addCondition.signal();
-        }
-
-        @Override
-        public void run(){
-            // El método super no hace nada, solo se invoca por buenas prácticas de programación
-            super.run();
-            while (!running){
-                try{
-                    mutex.lock();
-
-                    while (storage.size() != MAX_MESSAGES && !running)
-                        addCondition.await();
-
-                    if (storage.size() > 0) {
-                        printAll_();
-                        semaphore.release(MAX_MESSAGES);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } finally {
-                    mutex.unlock();
-                }
-            }
-
-
-            // received stop request
-            try{
-                mutex.lock(); // prevent IllegalMonitorStateException
-                stopped_thread.signal();
-            } finally {
-                mutex.unlock();
-            }
         }
     }
     public static class ManfutStats {
@@ -565,7 +568,7 @@ public class Market {
                     this.worstName,this.worst_cost,this.worst_points,
                     Error.end_color);
 
-            ManfutMessages.sendToStorge( msg);
+            ManfutMessages.sendToStorge(msg);
         }
 
         public void print_statistics_(){
@@ -583,7 +586,7 @@ public class Market {
                     this.worstName,this.worst_cost,this.worst_points,
                     Error.end_color);
 
-            ManfutMessages.sendToStorge( msg);
+            ManfutMessages.sendToStorge(msg);
 
         }
 
