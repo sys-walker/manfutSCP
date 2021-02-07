@@ -40,7 +40,7 @@ char *end_color = "\033[00m";
 //----Estructura de dades-----------------------------------------------------------------------------------------------
 struct TeamInterval
 {
-    TEquip inicio; 
+    TEquip inicio;
     TEquip final;
     long int PresupostFitxatges;
 };
@@ -118,7 +118,7 @@ sem_t semaphore_messages_thread;
 
 // ManfutStats class Thread -------------------------------------------
 void make_statistics(ManfutStats *local_statistics,TJugadorsEquip jugadors, int costEquip, int puntuacioEquip,
-                         long int PresupostFitxatges, TEquip equip);
+                     long int PresupostFitxatges, TEquip equip);
 void sync_local_statistics(ManfutStats stats);
 void print_(ManfutStats statistics, char *buffer);
 void print_statistics_(char *buffer);
@@ -287,7 +287,7 @@ void CalcularEquipOptim(long int PresupostFitxatges, PtrJugadorsEquip MillorEqui
     unsigned int maxbits;
     TEquip equip, primerEquip, ultimEquip, first, end;
     //int MaxPuntuacio=-1;
-    
+
     // Calculated number of bits required for all teams codification.
     maxbits = Log2(NPorters) * DPosPorters + Log2(NDefensors) * DPosDefensors + Log2(NMitjos) * DPosMitjos + Log2(NDelanters) * DPosDelanters;
     if (maxbits > Log2(ULLONG_MAX))
@@ -425,7 +425,7 @@ void *CalcularEquipOptim_Thread(TeamInterval *input) {
         // Reject teams with repeated players.
         if (JugadorsRepetits(jugadors)) {
             memset(buffer,0, sizeof(buffer));
-            sprintf(buffer, "Team %lld ->%s Invalid.\r%s", equip, color_red, end_color);
+            sprintf(buffer, "[Thread %lu] Team %lld ->%s Invalid.\r%s",pthread_self(), equip, color_red, end_color);
             sendToStorage(buffer);
             local_statistics.invld++;
             continue; // Equip no valid.
@@ -437,16 +437,16 @@ void *CalcularEquipOptim_Thread(TeamInterval *input) {
         int puntuacioEquip = PuntuacioEquip(jugadors);
         memset(buffer,0, sizeof(buffer));
 
-            // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
+        // Chech if the team points is bigger than current optimal team, then evaluate if the cost is lower than the available budget
         if (puntuacioEquip > MaxPuntuacio && costEquip < PresupostFitxatges) {
-                // We have a new partial optimal team.
-                MaxPuntuacio = puntuacioEquip;
-                Shared_MillorEquip = jugadors;
-                sprintf(buffer, "Team %lld ->%s Cost: %d  Points: %d. %s\n", equip, color_green, costEquip, puntuacioEquip, end_color);
-                sendToStorage(buffer);
+            // We have a new partial optimal team.
+            MaxPuntuacio = puntuacioEquip;
+            Shared_MillorEquip = jugadors;
+            sprintf(buffer, "[Thread %lu]  Team %lld ->%s Cost: %d  Points: %d. %s\n",pthread_self(), equip, color_green, costEquip, puntuacioEquip, end_color);
+            sendToStorage(buffer);
         } else {
-                sprintf(buffer, "Team %lld -> Cost: %d  Points: %d.\r%s", equip, costEquip, puntuacioEquip, end_color);
-                sendToStorage(buffer);
+            sprintf(buffer, "[Thread %lu]  Team %lld -> Cost: %d  Points: %d.\r%s",pthread_self(), equip, costEquip, puntuacioEquip, end_color);
+            sendToStorage(buffer);
         }
 
         pthread_mutex_unlock(&mutex_shared_variables);
@@ -493,7 +493,7 @@ void reset_(ManfutStats *statistics) {
     statistics->avg_points = 0;
 }
 void make_statistics( ManfutStats *local_statistics,TJugadorsEquip jugadors, int costEquip, int puntuacioEquip,
-                         long int PresupostFitxatges, TEquip equip) {
+                      long int PresupostFitxatges, TEquip equip) {
     local_statistics->avg_cost = ((local_statistics->avg_cost * (float)local_statistics->vld) + (float)costEquip) /(float) (local_statistics->vld + 1);
     local_statistics->avg_points = ((local_statistics->avg_points * (float)local_statistics->vld) + (float)puntuacioEquip) /(float) (local_statistics->vld + 1);
     local_statistics->vld++;
@@ -541,14 +541,14 @@ void print_(ManfutStats statistics, char *buffer) {
                    "++ Mejor Equipo (desde el punto de vista de la puntuación):Team %llu -> Cost %d, Points: %d. \n"
                    "++ Peor Equipo (desde el punto de vista de la puntuación):Team %llu -> Cost %d, Points: %d.\n"
                    "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n",
-                   end_color,pthread_self(),
-                   statistics.evalComb,statistics.vld,statistics.invld,
-                   statistics.avg_cost,statistics.avg_points,statistics.bestName,
-                   statistics.best_cost,
-                   statistics.best_points,
-                   statistics.worstName,
-                   statistics.worst_cost,
-                   statistics.worst_points);
+            end_color,pthread_self(),
+            statistics.evalComb,statistics.vld,statistics.invld,
+            statistics.avg_cost,statistics.avg_points,statistics.bestName,
+            statistics.best_cost,
+            statistics.best_points,
+            statistics.worstName,
+            statistics.worst_cost,
+            statistics.worst_points);
     sendToStorage(buffer);
 }
 void print_statistics_(char *buffer) {
@@ -559,14 +559,14 @@ void print_statistics_(char *buffer) {
                    "++ Mejor Equipo (desde el punto de vista de la puntuación):Team %llu -> Cost %d, Points: %d. \n"
                    "++ Peor Equipo (desde el punto de vista de la puntuación):Team %llu -> Cost %d, Points: %d.\n"
                    "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n",
-                   color_yellow,
-                   general_stats.evalComb,general_stats.vld,general_stats.invld,
-                   general_stats.avg_cost,general_stats.avg_points,general_stats.bestName,
-                   general_stats.best_cost,
-                   general_stats.best_points,
-                   general_stats.worstName,
-                   general_stats.worst_cost,
-                   general_stats.worst_points);
+            color_yellow,
+            general_stats.evalComb,general_stats.vld,general_stats.invld,
+            general_stats.avg_cost,general_stats.avg_points,general_stats.bestName,
+            general_stats.best_cost,
+            general_stats.best_points,
+            general_stats.worstName,
+            general_stats.worst_cost,
+            general_stats.worst_points);
     sendToStorage(buffer);
 }
 
