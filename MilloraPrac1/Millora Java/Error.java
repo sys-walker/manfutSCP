@@ -10,6 +10,7 @@ public enum Error {
     static String color_green = "\033[01;32m";
     static String color_blue = "\033[01;34m";
     static String end_color = "\033[00m";
+    static String color_orange = "\033[38;5;209m";
 
     public static void showError(String message)
     {
